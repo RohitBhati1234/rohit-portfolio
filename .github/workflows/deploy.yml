@@ -1,21 +1,37 @@
-- name: Deploy to EC2
-  uses: appleboy/ssh-action@v0.1.6
-  with:
-    host: 15.207.238.237
-    username: ubuntu
-    key: ${{ secrets.SSH_PRIVATE_KEY }}
-    port: 22
-    debug: true
-    script: |
-      echo "Connected to server"
+name: Deploy Portfolio
 
-      cd ~/portfolio || exit 1
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
-      git pull || exit 1
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-      docker build -t rohit-portfolio . || exit 1
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      docker stop rohit-container || true
-      docker rm rohit-container || true
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: 15.207.238.237
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          debug: true
+          script: |
+            echo "Connected to server"
 
-      docker run -d -p 80:80 --name rohit-container rohit-portfolio
+            cd ~/portfolio || exit 1
+
+            git pull || exit 1
+
+            docker build -t rohit-portfolio . || exit 1
+
+            docker stop rohit-container || true
+            docker rm rohit-container || true
+
+            docker run -d -p 80:80 --name rohit-container rohit-portfolio
